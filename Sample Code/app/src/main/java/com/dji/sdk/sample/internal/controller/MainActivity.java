@@ -1,291 +1,145 @@
 package com.dji.sdk.sample.internal.controller;
 
-import android.animation.AnimatorInflater;
-import android.animation.LayoutTransition;
-import android.animation.ObjectAnimator;
-import android.app.SearchManager;
-import android.content.Context;
-import android.content.Intent;
-import android.content.pm.ActivityInfo;
-import android.hardware.usb.UsbManager;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
-import android.widget.ProgressBar;
+
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SearchView;
 
 import com.dji.sdk.sample.R;
-import com.dji.sdk.sample.internal.model.ViewWrapper;
-import com.dji.sdk.sample.internal.utils.ToastUtils;
-import com.dji.sdk.sample.internal.view.DemoListView;
-import com.dji.sdk.sample.internal.view.PresentableView;
-import com.squareup.otto.Subscribe;
 
-import java.util.Stack;
-
+import dji.common.error.DJIError;
+import dji.common.error.DJISDKError;
+import dji.common.flightcontroller.FlightControllerState;
+import dji.sdk.base.BaseComponent;
 import dji.sdk.base.BaseProduct;
+import dji.sdk.flightcontroller.FlightController;
+import dji.sdk.products.Aircraft;
+import dji.sdk.sdkmanager.DJISDKInitEvent;
 import dji.sdk.sdkmanager.DJISDKManager;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = MainActivity.class.getSimpleName();
-    private FrameLayout contentFrameLayout;
-    private ObjectAnimator pushInAnimator;
-    private ObjectAnimator pushOutAnimator;
-    private ObjectAnimator popInAnimator;
-    private LayoutTransition popOutTransition;
-    private ProgressBar progressBar;
-    private Stack<ViewWrapper> stack;
-    private TextView titleTextView;
-    private SearchView searchView;
-    private MenuItem searchViewItem;
-    private MenuItem hintItem;
+    TextView data_view;
 
-    //region Life-cycle
+    //TODO: app builds but doesn't fails at runtime. Problem likely caused by drastic change of MainActivity which is referenced in many other classes.
+    //TODO: Solution: revert MainActivity back to original state. Add button to MainActivity that leads to data_display_view as Activity then put this code in that activity
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        DJISampleApplication.getEventBus().register(this);
-        setContentView(R.layout.activity_main);
-        setupActionBar();
-        contentFrameLayout = (FrameLayout) findViewById(R.id.framelayout_content);
-        initParams();
-    }
+        // main view setup
+        setContentView(R.layout.data_display_view);
+        LinearLayout displayLayout = findViewById(R.id.display_data_view_id);
+        displayLayout.setOrientation(LinearLayout.VERTICAL);
+        data_view = new TextView(this);
+        displayLayout.addView(data_view);
 
-    @Override
-    protected void onDestroy() {
-        DJISampleApplication.getEventBus().unregister(this);
-        super.onDestroy();
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the options menu from XML
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu, menu);
-
-        // Get the SearchView and set the searchable configuration
-        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-        searchViewItem = menu.findItem(R.id.action_search);
-        hintItem = menu.findItem(R.id.action_hint);
-        searchView = (SearchView) searchViewItem.getActionView();
-        // Assumes current activity is the searchable activity
-        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-        searchView.setIconifiedByDefault(false); // Do not iconify the widget; expand it by default
-        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
+        // register SDK
+        DJISDKManager.getInstance().registerApp(this, new DJISDKManager.SDKManagerCallback() {
             @Override
-            public boolean onClose() {
-                DJISampleApplication.getEventBus().post(new SearchQueryEvent(""));
-                return false;
+            public void onRegister(DJIError djiError) {
+                if (djiError == DJISDKError.REGISTRATION_SUCCESS) {
+                    DJISDKManager.getInstance().startConnectionToProduct();
+                } else {
+                    updateUI("Registration failed: " + djiError.getDescription());
+                }
             }
-        });
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+
+//            @Override
+//            public void onRegister(DJIError djiError) {
+//
+//            }
+
             @Override
-            public boolean onQueryTextSubmit(String query) {
-                DJISampleApplication.getEventBus().post(new SearchQueryEvent(query));
-                return false;
+            public void onProductDisconnect() {
+                updateUI("Product disconnected");
             }
 
             @Override
-            public boolean onQueryTextChange(String newText) {
-                DJISampleApplication.getEventBus().post(new SearchQueryEvent(newText));
-                return false;
+            public void onProductConnect(BaseProduct baseProduct) {
+                updateUI("Product connected");
+                setupFlightControllerCallback();
             }
-        });
 
-        // Hint click
-        hintItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                showHint();
-                return false;
+            public void onProductChanged(BaseProduct baseProduct) {
+
             }
-        });
-        return true;
-    }
 
-    @Override
-    protected void onNewIntent(@NonNull Intent intent) {
-        String action = intent.getAction();
-        if (UsbManager.ACTION_USB_ACCESSORY_ATTACHED.equals(action)) {
-            Intent attachedIntent = new Intent();
-            attachedIntent.setAction(DJISDKManager.USB_ACCESSORY_ATTACHED);
-            sendBroadcast(attachedIntent);
-        }
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (stack.size() > 1) {
-            popView();
-        } else {
-            super.onBackPressed();
-        }
-    }
-
-    //endregion
-
-    private void setupActionBar() {
-        ActionBar actionBar = getSupportActionBar();
-        if (null != actionBar) {
-            actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
-            actionBar.setCustomView(R.layout.actionbar_custom);
-
-            titleTextView = (TextView) (actionBar.getCustomView().findViewById(R.id.title_tv));
-        }
-    }
-
-
-    private void setupInAnimations() {
-        pushInAnimator = (ObjectAnimator) AnimatorInflater.loadAnimator(this, R.animator.slide_in_right);
-        pushOutAnimator = (ObjectAnimator) AnimatorInflater.loadAnimator(this, R.animator.fade_out);
-        popInAnimator = (ObjectAnimator) AnimatorInflater.loadAnimator(this, R.animator.fade_in);
-        ObjectAnimator popOutAnimator =
-                (ObjectAnimator) AnimatorInflater.loadAnimator(this, R.animator.slide_out_right);
-
-        pushOutAnimator.setStartDelay(100);
-
-        popOutTransition = new LayoutTransition();
-        popOutTransition.setAnimator(LayoutTransition.DISAPPEARING, popOutAnimator);
-        popOutTransition.setDuration(popOutAnimator.getDuration());
-    }
-
-    private void initParams() {
-        setupInAnimations();
-
-        stack = new Stack<ViewWrapper>();
-        View view = contentFrameLayout.getChildAt(0);
-        stack.push(new ViewWrapper(view, R.string.activity_component_list));
-    }
-
-    private void pushView(ViewWrapper wrapper) {
-        if (stack.size() <= 0) {
-            return;
-        }
-
-        contentFrameLayout.setLayoutTransition(null);
-
-        View showView = wrapper.getView();
-
-        View preView = stack.peek().getView();
-
-        stack.push(wrapper);
-
-        if (showView.getParent() != null) {
-            ((ViewGroup) showView.getParent()).removeView(showView);
-        }
-        contentFrameLayout.addView(showView);
-
-        pushOutAnimator.setTarget(preView);
-        pushOutAnimator.start();
-
-        pushInAnimator.setTarget(showView);
-        pushInAnimator.setFloatValues(contentFrameLayout.getWidth(), 0);
-        pushInAnimator.start();
-
-        refreshTitle();
-        refreshOptionsMenu();
-    }
-
-    private void refreshTitle() {
-        if (stack.size() > 1) {
-            ViewWrapper wrapper = stack.peek();
-            titleTextView.setText(wrapper.getTitleId());
-        } else if (stack.size() == 1) {
-            BaseProduct product = DJISampleApplication.getProductInstance();
-            if (product != null && product.getModel() != null) {
-                titleTextView.setText("" + product.getModel().getDisplayName());
-            } else {
-                titleTextView.setText(R.string.sample_app_name);
-            }
-        }
-    }
-
-    private void popView() {
-
-        if (stack.size() <= 1) {
-            finish();
-            return;
-        }
-
-        ViewWrapper removeWrapper = stack.pop();
-
-        View showView = stack.peek().getView();
-        View removeView = removeWrapper.getView();
-
-        contentFrameLayout.setLayoutTransition(popOutTransition);
-        contentFrameLayout.removeView(removeView);
-
-        popInAnimator.setTarget(showView);
-        popInAnimator.start();
-
-        refreshTitle();
-        refreshOptionsMenu();
-    }
-
-    private void refreshOptionsMenu() {
-        if (stack.size() == 2 && stack.peek().getView() instanceof DemoListView) {
-            searchViewItem.setVisible(true);
-        } else {
-            searchViewItem.setVisible(false);
-            searchViewItem.collapseActionView();
-        }
-        if (stack.size() == 3 && stack.peek().getView() instanceof PresentableView) {
-            hintItem.setVisible(true);
-        } else {
-            hintItem.setVisible(false);
-        }
-    }
-
-
-    private void showHint() {
-        if (stack.size() != 0 && stack.peek().getView() instanceof PresentableView) {
-            ToastUtils.setResultToToast(((PresentableView) stack.peek().getView()).getHint());
-        }
-    }
-
-
-    //region Event-Bus
-    @Subscribe
-    public void onReceiveStartFullScreenRequest(RequestStartFullScreenEvent event) {
-        getSupportActionBar().hide();
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-    }
-
-    @Subscribe
-    public void onReceiveEndFullScreenRequest(RequestEndFullScreenEvent event) {
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        getSupportActionBar().show();
-    }
-
-    @Subscribe
-    public void onPushView(final ViewWrapper wrapper) {
-        runOnUiThread(new Runnable() {
             @Override
-            public void run() {
-                pushView(wrapper);
+            public void onComponentChange(BaseProduct.ComponentKey componentKey, BaseComponent baseComponent, BaseComponent baseComponent1) {
+
+            }
+
+            @Override
+            public void onInitProcess(DJISDKInitEvent djisdkInitEvent, int i) {
+
+            }
+
+            @Override
+            public void onDatabaseDownloadProgress(long l, long l1) {
+
             }
         });
     }
 
-    @Subscribe
-    public void onConnectivityChange(ConnectivityChangeEvent event) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                refreshTitle();
+
+    private void setupFlightControllerCallback() {
+        BaseProduct product = DJISDKManager.getInstance().getProduct();
+        if (product instanceof Aircraft) {
+            Aircraft aircraft = (Aircraft) product;
+            FlightController flightController = aircraft.getFlightController();
+
+            if (flightController != null) {
+                flightController.setStateCallback(new FlightControllerState.Callback() {
+                    @Override
+                    public void onUpdate(@NonNull FlightControllerState state) {
+                        // build data into one big string to display in view
+                        final StringBuilder data = new StringBuilder();
+
+                        // gps location values
+                        double latitude = state.getAircraftLocation().getLatitude();
+                        double longitude = state.getAircraftLocation().getLongitude();
+                        float altitude = state.getAircraftLocation().getAltitude();
+                        // imu angles
+                        double pitch = state.getAttitude().pitch;
+                        double roll = state.getAttitude().roll;
+                        double yaw = state.getAttitude().yaw;
+                        // velocity of drone
+                        double velX = state.getVelocityX();
+                        double velY = state.getVelocityY();
+                        double velZ = state.getVelocityZ();
+
+                        // gps location values
+                        data.append("Latitude: ").append(latitude).append("\n");
+                        data.append("Longitude: ").append(longitude).append("\n");
+                        data.append("Altitude: ").append(altitude).append("\n");
+                        // imu angles
+                        data.append("Pitch: ").append(pitch).append("\n");
+                        data.append("Roll: ").append(roll).append("\n");
+                        data.append("Yaw: ").append(yaw).append("\n");
+                        // // velocity of drone
+                        data.append("Velocity (XYZ): ")
+                                .append(velX).append(", ")
+                                .append(velY).append(", ")
+                                .append(velZ).append("\n");
+
+                        updateUI(data.toString());
+                    }
+                });
             }
-        });
+        }
     }
+
+
+    private void updateUI(final String text) {
+        runOnUiThread(() -> data_view.setText(text));
+    }
+
+
 
     public static class SearchQueryEvent {
         private final String query;
@@ -299,6 +153,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    // below are functions from original MainActivity that are referenced by other classes
     public static class RequestStartFullScreenEvent {
     }
 
@@ -307,5 +163,5 @@ public class MainActivity extends AppCompatActivity {
 
     public static class ConnectivityChangeEvent {
     }
-    //endregion
+
 }
