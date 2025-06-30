@@ -1,4 +1,7 @@
-# [MSDK V5 Released](https://github.com/dji-sdk/Mobile-SDK-Android-V5)
+
+
+# [Cloned from DJI SDK Sample v4](https://github.com/dji-sdk/Mobile-SDK-Android)
+# SDK Sample Code will be used as starting point for DJI Drone Project
 
 MSDK V5 Supported Product:
 * [DJI Mavic 3 Enterprise Series](https://www.dji.com/cn/mavic-3-enterprise)
