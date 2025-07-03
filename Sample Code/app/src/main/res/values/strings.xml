@@ -24,6 +24,9 @@
     <string name="login">Login</string>
 
     <!-- Component list -->
+
+    <string name="component_listview_waypoint_view">Waypoint View</string>
+
     <string name="component_listview_component">Component</string>
     <string name="component_listview_camera">Camera</string>
     <string name="component_listview_gimbal">Gimbal</string>

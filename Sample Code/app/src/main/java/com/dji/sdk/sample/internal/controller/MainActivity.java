@@ -9,14 +9,17 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
@@ -50,12 +53,31 @@ public class MainActivity extends AppCompatActivity {
     private MenuItem searchViewItem;
     private MenuItem hintItem;
 
+//    Drone drone;
+
     //region Life-cycle
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         DJISampleApplication.getEventBus().register(this);
         setContentView(R.layout.activity_main);
+
+//        drone = new Drone();
+
+//        Button waypointBtn = findViewById(R.id.waypoint_button);
+//        waypointBtn.setOnClickListener(v -> {
+////            drone.log(TAG, "testing", true, getApplicationContext());
+//            WaypointView waypointView = new WaypointView(MainActivity.this);
+//            ViewWrapper wrapper = new ViewWrapper(waypointView, R.string.component_listview_waypoint_view);
+//            pushView(wrapper);
+//        });
+
+//        Button forceLand = findViewById(R.id.force_land);
+//        forceLand.setOnClickListener(v -> {
+//            // check if waypoint mission started, if so stop
+//            // force land
+//        });
+
         setupActionBar();
         contentFrameLayout = (FrameLayout) findViewById(R.id.framelayout_content);
         initParams();
