@@ -105,6 +105,7 @@ public class GetDataView extends LinearLayout implements PresentableView {
                 });
             }
         }
+        data_view.setText("error, aircraft or controller not found");
     }
 
 
