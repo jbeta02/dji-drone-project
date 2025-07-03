@@ -21,6 +21,13 @@
         android:layout_marginTop="300dp"
         android:text="Waypoint" />
 
+    <Button
+        android:id="@+id/data_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="350dp"
+        android:text="data" />
+
         <Button
             android:id="@+id/force_land"
             android:layout_width="wrap_content"

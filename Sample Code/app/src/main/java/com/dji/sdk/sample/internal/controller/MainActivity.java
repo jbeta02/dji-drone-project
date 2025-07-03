@@ -72,6 +72,13 @@ public class MainActivity extends AppCompatActivity {
             pushView(wrapper);
         });
 
+        Button dataBtn = findViewById(R.id.data_button);
+        dataBtn.setOnClickListener(v -> {
+            GetDataView getDataView = new GetDataView(MainActivity.this);
+            ViewWrapper wrapper = new ViewWrapper(getDataView, R.string.component_listview_data_view);
+            pushView(wrapper);
+        });
+
         Button forceLand = findViewById(R.id.force_land);
         forceLand.setOnClickListener(v -> {
             // check if waypoint mission started, if so stop
