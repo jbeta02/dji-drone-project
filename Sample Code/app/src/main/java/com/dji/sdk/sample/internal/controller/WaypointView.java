@@ -29,8 +29,7 @@ public class WaypointView extends LinearLayout implements PresentableView {
 
     private static final String TAG = "WAYPOINT";
 
-//    Drone drone;
-
+    Drone drone;
 
     public WaypointView(Context context) {
         super(context);
@@ -41,89 +40,80 @@ public class WaypointView extends LinearLayout implements PresentableView {
 //        LayoutInflater layoutInflater = (LayoutInflater) context.getSystemService(Service.LAYOUT_INFLATER_SERVICE);
 //        layoutInflater.inflate(R.layout.demo_list_view, this, true);
 
-//        drone = new Drone();
+        drone = new Drone(context);
 
         TextView title = new TextView(context);
         title.setText("Waypoint View");
         title.setTextSize(24);
         addView(title);
 
-//        Button launchButton = new Button(this.getContext());
-//        launchButton.setText("launchButton");
-//        launchButton.setOnClickListener(v -> {
-//            drone.takeOff();
-//            uploadAndStartWaypointMission();
-//        });
-//
-//        Button stopButton = new Button(this.getContext());
-//        stopButton.setText("stopButton");
-//        stopButton.setOnClickListener(v -> {
-//            WaypointMissionOperator operator = DJISDKManager.getInstance().getMissionControl().getWaypointMissionOperator();
-//            operator.stopMission(error -> {
-//                if (error == null) {
-//                    Toast.makeText(context, "Waypoint Mission Stopped", Toast.LENGTH_SHORT).show();
-//                } else {
-//                    Toast.makeText(context, "Stop Failed: " + error.getDescription(), Toast.LENGTH_SHORT).show();
-//                }
-//            });
-//        });
-//
-//        addView(launchButton);
-//        addView(stopButton);
+        Button launchButton = new Button(this.getContext());
+        launchButton.setText("launchButton");
+        launchButton.setOnClickListener(v -> {
+            drone.takeOff();
+            uploadAndStartWaypointMission();
+        });
+
+        Button stopButton = new Button(this.getContext());
+        stopButton.setText("stopButton");
+        stopButton.setOnClickListener(v -> {
+            getWaypointMissionOperator().stopMission(error -> {
+                if (error == null) {
+                    drone.log(TAG, "Waypoint Mission Stopped", getContext());
+                } else {
+                    drone.log(TAG, "Stop Failed: " + error.getDescription(), getContext());
+                }
+            });
+            drone.forceLanding(); //TODO: can remove above since taken care of by this method
+        });
+
+        addView(launchButton);
+        addView(stopButton);
 
     }
 
     private void uploadAndStartWaypointMission() {
-//        // define waypoints (lat, lon, alt)
-//        // TODO: fly done and find good points before running !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-//        Waypoint wp1 = new Waypoint(34.0219, -118.4814, 20f);  // altitude in meters
-//        Waypoint wp2 = new Waypoint(34.0220, -118.4810, 25f);
-//        Waypoint wp3 = new Waypoint(34.0221, -118.4806, 20f);           //TODO:  change waypoint values !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-//
-//        // build mission
-//        WaypointMission.Builder builder = new WaypointMission.Builder()
-//                .finishedAction(WaypointMissionFinishedAction.AUTO_LAND) // Auto land at the end of mission
-//                .flightPathMode(WaypointMissionFlightPathMode.NORMAL) // normal refers to going to waypoint in straight lines instead of curves
-//                .autoFlightSpeed(5.0f) // m/s
-//                .maxFlightSpeed(10.0f) // m/s
-//                .gotoFirstWaypointMode(WaypointMissionGotoWaypointMode.SAFELY); // rise to altitude then go to lat and lon
-//
-//        builder.addWaypoint(wp1);
-//        builder.addWaypoint(wp2);
-//        builder.addWaypoint(wp3);
-//
-//        WaypointMission mission = builder.build();
-//
-//        // load mission
-//        getWaypointMissionOperator().loadMission(mission);
-//
-//        // upload mission
-//        getWaypointMissionOperator().uploadMission((DJIError uploadError) -> {
-//            if (uploadError == null) {
-//                String msg = "Mission uploaded successfully!";
-//                Log.d(TAG, msg);
-//                Toast.makeText(this.getContext(), msg, Toast.LENGTH_SHORT).show();
-//
-//
-//                // start mission
-//                getWaypointMissionOperator().startMission((DJIError startError) -> {
-//                    if (startError == null) {
-//                        String msgInner = "Mission started!";
-//                        Log.d(TAG, msgInner);
-//                        Toast.makeText(this.getContext(), msgInner, Toast.LENGTH_SHORT).show();
-//                    } else {
-//                        String msgInner = "Start mission error: ";
-//                        Log.d(TAG, msgInner);
-//                        Toast.makeText(this.getContext(), msgInner, Toast.LENGTH_SHORT).show();
-//                    }
-//                });
-//
-//            } else {
-//                String msg = "Upload failed: " + uploadError.getDescription();
-//                Log.d(TAG, msg);
-//                Toast.makeText(this.getContext(), msg, Toast.LENGTH_SHORT).show();
-//            }
-//        });
+        // define waypoints (lat, lon, alt)
+        // TODO: fly done and find good points before running !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        Waypoint wp1 = new Waypoint(34.0219, -118.4814, 20f);  // altitude in meters
+        Waypoint wp2 = new Waypoint(34.0220, -118.4810, 25f);
+        Waypoint wp3 = new Waypoint(34.0221, -118.4806, 20f);           //TODO:  change waypoint values !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+        // build mission
+        WaypointMission.Builder builder = new WaypointMission.Builder()
+                .finishedAction(WaypointMissionFinishedAction.AUTO_LAND) // Auto land at the end of mission
+                .flightPathMode(WaypointMissionFlightPathMode.NORMAL) // normal refers to going to waypoint in straight lines instead of curves
+                .autoFlightSpeed(5.0f) // m/s
+                .maxFlightSpeed(10.0f) // m/s
+                .gotoFirstWaypointMode(WaypointMissionGotoWaypointMode.SAFELY); // rise to altitude then go to lat and lon
+
+        builder.addWaypoint(wp1);
+        builder.addWaypoint(wp2);
+        builder.addWaypoint(wp3);
+
+        WaypointMission mission = builder.build();
+
+        // load mission
+        getWaypointMissionOperator().loadMission(mission);
+
+        // upload mission
+        getWaypointMissionOperator().uploadMission((DJIError uploadError) -> {
+            if (uploadError == null) {
+                drone.log(TAG, "Mission uploaded successfully!", getContext());
+
+                // start mission
+                getWaypointMissionOperator().startMission((DJIError startError) -> {
+                    if (startError == null) {
+                        drone.log(TAG, "Mission started!", getContext());
+                    } else {
+                        drone.log(TAG, "Start mission error: " + startError.getDescription(), getContext());
+                    }
+                });
+
+            } else {
+                drone.log(TAG, "Upload failed: " + uploadError.getDescription(), getContext());
+            }
+        });
     }
 
     @Override

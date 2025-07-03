@@ -18,16 +18,16 @@
         android:id="@+id/waypoint_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="300dp"
         android:text="Waypoint" />
 
-    <!--    <Button-->
-    <!--        android:id="@+id/force_land"-->
-    <!--        android:layout_width="wrap_content"-->
-    <!--        android:layout_height="wrap_content"-->
-    <!--        android:layout_marginTop="50dp"-->
-    <!--        android:layout_marginStart="300dp"-->
-    <!--        android:text="Force Land" />-->
+        <Button
+            android:id="@+id/force_land"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="300dp"
+            android:layout_marginStart="300dp"
+            android:text="Force Land" />
 
 </FrameLayout>
 

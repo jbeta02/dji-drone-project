@@ -5,13 +5,19 @@ import android.util.Log;
 import android.widget.Toast;
 
 import dji.sdk.flightcontroller.FlightController;
+import dji.sdk.mission.MissionControl;
+import dji.sdk.mission.waypoint.WaypointMissionOperator;
 import dji.sdk.products.Aircraft;
 import dji.sdk.sdkmanager.DJISDKManager;
 
-//TODO: add take off
-// TODO: add emergence landing code (stop mission or stop virtual sticks)
 public class Drone {
     private static final String TAG = "Drone Class";
+
+    Context context;
+
+    public Drone(Context context) {
+        this.context = context;
+    }
 
     public void takeOff() {
         Aircraft aircraft = (Aircraft) DJISDKManager.getInstance().getProduct();
@@ -21,22 +27,39 @@ public class Drone {
                 aircraft.getFlightController().startTakeoff(djiError -> {
                     if (djiError == null) {
                         // takeoff succeeded, drone is hovering at takeoff altitude.
-                        Log.d(TAG, "Takeoff successful, waiting to start mission.");
+                        log(TAG, "Takeoff successful, waiting to start mission.", context);
                         // let drone sit a bit
                         new android.os.Handler().postDelayed(() -> {
-                            Log.d(TAG, "Delay before letting anything other drone movements to start");
+                            log(TAG, "Delay before letting anything other drone movements to start", context);
                         }, 5000);
                     } else {
-                        Log.e(TAG, "Takeoff failed: " + djiError.getDescription());
+                        log(TAG, "Takeoff failed: " + djiError.getDescription(), context);
                     }
                 });
             }
         }
     }
 
+    // stops mission if in a mission then lands drone
+    public void forceLanding() { //TODO: add for virtual sticks
+
+        WaypointMissionOperator operator =  DJISDKManager.getInstance().getMissionControl().getWaypointMissionOperator();
+
+        if (operator.getLoadedMission() != null) { // in a mission so stop
+            operator.stopMission(null);
+            log(TAG, "mission stopped", context);
+        }
+
+        FlightController fc = ((Aircraft) DJISDKManager.getInstance().getProduct()).getFlightController();
+        fc.startLanding(null);
+        log(TAG, "landing drone", context);
+    }
+
+
     public void log(String tag, String msg) {
        log(tag, msg, null);
     }
+
 
     // if context included, will also produce toast msg
     public void log(String tag, String msg, Context context) {
