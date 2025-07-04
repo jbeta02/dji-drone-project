@@ -4,6 +4,9 @@ import android.content.Context;
 import android.util.Log;
 import android.widget.Toast;
 
+import dji.common.error.DJIError;
+import dji.common.flightcontroller.virtualstick.FlightControlData;
+import dji.common.util.CommonCallbacks;
 import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.mission.MissionControl;
 import dji.sdk.mission.waypoint.WaypointMissionOperator;
@@ -14,24 +17,49 @@ public class Drone {
     private static final String TAG = "Drone Class";
 
     Context context;
+    boolean isSendingVirtualSticks = false;
+
+    Aircraft aircraft;
+    FlightController flightController;
+    WaypointMissionOperator operator;
 
     public Drone(Context context) {
         this.context = context;
+
+//        aircraft = (Aircraft) DJISDKManager.getInstance().getProduct();
+//        flightController = aircraft.getFlightController();
+//        operator =  DJISDKManager.getInstance().getMissionControl().getWaypointMissionOperator();
+    }
+
+    public void initDrone() {
+        aircraft = (Aircraft) DJISDKManager.getInstance().getProduct();
+        flightController = aircraft.getFlightController();
+        operator =  DJISDKManager.getInstance().getMissionControl().getWaypointMissionOperator();
     }
 
     public void takeOff() {
-        Aircraft aircraft = (Aircraft) DJISDKManager.getInstance().getProduct();
-        if (aircraft != null && aircraft.getFlightController() != null) {
-            if (aircraft.getFlightController() != null) {
-                aircraft.getFlightController().startTakeoff(djiError -> {
+        if (isSetupProperly()) { // prevent take off if not setup properly
+            aircraft.getFlightController().startTakeoff(new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
                     if (djiError == null) {
                         // takeoff succeeded, drone is hovering at takeoff altitude.
                         log(TAG, "Takeoff successful", context);
                     } else {
                         log(TAG, "Takeoff failed: " + djiError.getDescription(), context);
                     }
-                });
-            }
+                }
+            });
+
+            // old method of launching (does wait for launch completion
+//            aircraft.getFlightController().startTakeoff(djiError -> {
+//                if (djiError == null) {
+//                    // takeoff succeeded, drone is hovering at takeoff altitude.
+//                    log(TAG, "Takeoff successful", context);
+//                } else {
+//                    log(TAG, "Takeoff failed: " + djiError.getDescription(), context);
+//                }
+//            });
         }
     }
 
@@ -40,16 +68,35 @@ public class Drone {
 
         log(TAG, "Landing drone", context);
 
-        WaypointMissionOperator operator =  DJISDKManager.getInstance().getMissionControl().getWaypointMissionOperator();
-
+        // stop mission
         if (operator.getLoadedMission() != null) { // in a mission so stop
             operator.stopMission(null);
             log(TAG, "mission stopped", context);
         }
 
-        FlightController fc = ((Aircraft) DJISDKManager.getInstance().getProduct()).getFlightController();
-        fc.startLanding(null);
+        // stop virtual stick mode
+        if (isSendingVirtualSticks) {
+            isSendingVirtualSticks = false;
+
+            flightController.setVirtualStickModeEnabled(false, error -> {
+                if (error == null) {
+                    log(TAG, "Virtual stick disabled", context);
+                } else {
+                    log(TAG,"Failed to disable virtual stick: " + error.getDescription(), context);
+                }
+            });
+
+        }
+
+        // starting landing
+        flightController.startLanding(null);
         log(TAG, "landing drone", context);
+    }
+
+
+    // use this to check before starting anything that initiates a movement
+    public boolean isSetupProperly() {
+        return aircraft != null && aircraft.getFlightController() != null;
     }
 
 

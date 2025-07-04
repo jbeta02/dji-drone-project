@@ -72,6 +72,18 @@ public class MainActivity extends AppCompatActivity {
             pushView(wrapper);
         });
 
+        Button virtualSticksBtn = findViewById(R.id.virtual_sticks_button);
+        virtualSticksBtn.setOnClickListener(v -> {
+            VirtualSticksView virtualSticksView = new VirtualSticksView(MainActivity.this);
+            ViewWrapper wrapper = new ViewWrapper(virtualSticksView, R.string.component_listview_virtual_sticks_view);
+            pushView(wrapper);
+        });
+
+        Button initDroneBtn = findViewById(R.id.init_drone);
+        initDroneBtn.setOnClickListener(v -> {
+            drone.initDrone(); // TODO: might be able to remove is drone constructor works
+        });
+
         Button forceLand = findViewById(R.id.force_land);
         forceLand.setOnClickListener(v -> {
             // check if waypoint mission started, if so stop

@@ -21,13 +21,28 @@
         android:layout_marginTop="300dp"
         android:text="Waypoint" />
 
-        <Button
-            android:id="@+id/force_land"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="300dp"
-            android:layout_marginStart="300dp"
-            android:text="Land Drone" />
+    <Button
+        android:id="@+id/virtual_sticks_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="350dp"
+        android:text="Virual Sticks" />
+
+    <Button
+        android:id="@+id/force_land"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="300dp"
+        android:layout_marginStart="300dp"
+        android:text="Land Drone" />
+
+    <Button
+        android:id="@+id/init_drone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="500dp"
+        android:layout_marginStart="300dp"
+        android:text="Init Drone" />
 
 </FrameLayout>
 

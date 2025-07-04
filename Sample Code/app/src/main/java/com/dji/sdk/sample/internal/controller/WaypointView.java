@@ -69,7 +69,7 @@ public class WaypointView extends LinearLayout implements PresentableView {
                     drone.log(TAG, "Failed to stop Mission: " + error.getDescription(), getContext());
                 }
             });
-            drone.forceLanding(); //TODO: can remove above since taken care of by this method
+            drone.forceLanding();
         });
 
         addView(launchButton);

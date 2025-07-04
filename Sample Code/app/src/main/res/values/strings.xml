@@ -26,6 +26,7 @@
     <!-- Component list -->
 
     <string name="component_listview_waypoint_view">Waypoint View</string>
+    <string name="component_listview_virtual_sticks_view">Waypoint View</string>
 
     <string name="component_listview_component">Component</string>
     <string name="component_listview_camera">Camera</string>
