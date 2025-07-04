@@ -54,14 +54,20 @@ public class WaypointView extends LinearLayout implements PresentableView {
             uploadAndStartWaypointMission();
         });
 
+        Button statMissionButton = new Button(this.getContext());
+        statMissionButton.setText("startMissionButton");
+        statMissionButton.setOnClickListener(v -> {
+            uploadAndStartWaypointMission();
+        });
+
         Button stopButton = new Button(this.getContext());
         stopButton.setText("stopButton");
         stopButton.setOnClickListener(v -> {
             getWaypointMissionOperator().stopMission(error -> {
                 if (error == null) {
-                    drone.log(TAG, "Waypoint Mission Stopped", getContext());
+                    drone.log(TAG, "Waypoint Mission stopped", getContext());
                 } else {
-                    drone.log(TAG, "Stop Failed: " + error.getDescription(), getContext());
+                    drone.log(TAG, "Failed to stop Mission: " + error.getDescription(), getContext());
                 }
             });
             drone.forceLanding(); //TODO: can remove above since taken care of by this method
@@ -74,10 +80,8 @@ public class WaypointView extends LinearLayout implements PresentableView {
 
     private void uploadAndStartWaypointMission() {
         // define waypoints (lat, lon, alt)
-        // TODO: fly done and find good points before running !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        Waypoint wp1 = new Waypoint(34.0219, -118.4814, 20f);  // altitude in meters
-        Waypoint wp2 = new Waypoint(34.0220, -118.4810, 25f);
-        Waypoint wp3 = new Waypoint(34.0221, -118.4806, 20f);           //TODO:  change waypoint values !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        Waypoint wp1 = new Waypoint(38.562303, -121.421518, 20f);  // altitude in meters
+        Waypoint wp2 = new Waypoint(38.562330, -121.421530, 25f);
 
         // build mission
         WaypointMission.Builder builder = new WaypointMission.Builder()
@@ -89,7 +93,6 @@ public class WaypointView extends LinearLayout implements PresentableView {
 
         builder.addWaypoint(wp1);
         builder.addWaypoint(wp2);
-        builder.addWaypoint(wp3);
 
         WaypointMission mission = builder.build();
 

@@ -22,16 +22,11 @@ public class Drone {
     public void takeOff() {
         Aircraft aircraft = (Aircraft) DJISDKManager.getInstance().getProduct();
         if (aircraft != null && aircraft.getFlightController() != null) {
-
             if (aircraft.getFlightController() != null) {
                 aircraft.getFlightController().startTakeoff(djiError -> {
                     if (djiError == null) {
                         // takeoff succeeded, drone is hovering at takeoff altitude.
-                        log(TAG, "Takeoff successful, waiting to start mission.", context);
-                        // let drone sit a bit
-                        new android.os.Handler().postDelayed(() -> {
-                            log(TAG, "Delay before letting anything other drone movements to start", context);
-                        }, 5000);
+                        log(TAG, "Takeoff successful", context);
                     } else {
                         log(TAG, "Takeoff failed: " + djiError.getDescription(), context);
                     }
@@ -42,6 +37,8 @@ public class Drone {
 
     // stops mission if in a mission then lands drone
     public void forceLanding() { //TODO: add for virtual sticks
+
+        log(TAG, "Landing drone", context);
 
         WaypointMissionOperator operator =  DJISDKManager.getInstance().getMissionControl().getWaypointMissionOperator();
 
