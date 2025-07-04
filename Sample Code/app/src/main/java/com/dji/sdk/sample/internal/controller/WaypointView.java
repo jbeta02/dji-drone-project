@@ -74,6 +74,7 @@ public class WaypointView extends LinearLayout implements PresentableView {
         });
 
         addView(launchButton);
+        addView(statMissionButton);
         addView(stopButton);
 
     }

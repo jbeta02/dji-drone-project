@@ -27,7 +27,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="300dp"
             android:layout_marginStart="300dp"
-            android:text="Force Land" />
+            android:text="Land Drone" />
 
 </FrameLayout>
 
