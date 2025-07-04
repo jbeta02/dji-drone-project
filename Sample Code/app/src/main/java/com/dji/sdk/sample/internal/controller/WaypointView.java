@@ -48,20 +48,20 @@ public class WaypointView extends LinearLayout implements PresentableView {
         addView(title);
 
         Button launchButton = new Button(this.getContext());
-        launchButton.setText("launchButton");
+        launchButton.setText("Launch Button");
         launchButton.setOnClickListener(v -> {
             drone.takeOff();
             uploadAndStartWaypointMission();
         });
 
         Button statMissionButton = new Button(this.getContext());
-        statMissionButton.setText("startMissionButton");
+        statMissionButton.setText("Start Mission Button");
         statMissionButton.setOnClickListener(v -> {
             uploadAndStartWaypointMission();
         });
 
         Button stopButton = new Button(this.getContext());
-        stopButton.setText("stopButton");
+        stopButton.setText("Stop Button");
         stopButton.setOnClickListener(v -> {
             getWaypointMissionOperator().stopMission(error -> {
                 if (error == null) {
